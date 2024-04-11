@@ -2,57 +2,60 @@
 #include <string>
 #include <cpprest/http_listener.h>
 #include <cpprest/json.h>
-#include <jwt/jwt.hpp>
+#include <libpq-fe.h>
 
 using namespace std;
 using namespace web;
 using namespace web::http;
 using namespace web::http::experimental::listener;
-using namespace jwt::params;
 
-const string endpoint = "http://localhost:8080/specific_endpoint";
+PGconn* conn = nullptr;
 
-// Secret key for JWT token signing
-const string secret_key = "your_secret_key";
+void create_client(const string& client_name, const string& client_phone, const string& client_address, const string& client_email) {
+    const char *conninfo = "dbname=atelie user=postgres password=1234 hostaddr=127.0.0.1 port=5432";
+    conn = PQconnectdb(conninfo);
 
-void handle_specific_endpoint(const http_request& request) {
-    http_response response(status_codes::OK);
-    response.set_body("This is the specific endpoint response.");
-    request.reply(response);
-}
+    if (PQstatus(conn) != CONNECTION_OK) {
+        cerr << "Connection to database failed: " << PQerrorMessage(conn) << endl;
+        PQfinish(conn);
+        exit(1);
+    }
 
-void handle_jwt_generation(const http_request& request) {
-    using namespace jwt::params;
+    const char* sql = "INSERT INTO clients (FCS_client, phone_client, address_client, email_client) VALUES ($1, $2, $3, $4)";
+    const char* params[4] = {client_name.c_str(), client_phone.c_str(), client_address.c_str(), client_email.c_str()};
+    PGresult* res = PQexecParams(conn, sql, 4, nullptr, params, nullptr, nullptr, 0);
 
-    auto key = "secret"; //Secret to use for the algorithm
-    //Create JWT object
-    jwt::jwt_object obj{algorithm("HS256"), payload({{"some", "payload"}}), secret(key)};
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        cerr << "Failed to insert client: " << PQerrorMessage(conn) << endl;
+        PQclear(res);
+        PQfinish(conn);
+        exit(1);
+    }
 
-    //Get the encoded string/assertion
-    auto enc_str = obj.signature();
-    std::cout << enc_str << std::endl;
-
-    //Decode
-    auto dec_obj = jwt::decode(enc_str, algorithms({"HS256"}), secret(key));
-    std::cout << dec_obj.header() << std::endl;
-    std::cout << dec_obj.payload() << std::endl;
-
-    // Set response body with the generated token
-    http_response response(status_codes::OK);
-    response.headers().set_content_type("application/json");
-    response.set_body(enc_str);
-    request.reply(response);
+    PQclear(res);
+    PQfinish(conn);
 }
 
 int main() {
     http_listener listener("http://localhost:8080");
 
-    listener.support(methods::GET, [](const http_request& request) {
+    listener.support(methods::POST, [](const http_request& request) {
         auto relative_path = uri::decode(request.relative_uri().path());
-        if (relative_path == "/specific_endpoint") {
-            handle_specific_endpoint(request);
-        } else if (relative_path == "/jwt") {
-            handle_jwt_generation(request);
+        if (relative_path == "/clients") {
+            // Обработка POST запроса для создания клиента
+            request.extract_json().then([=](json::value request_body) {
+                // Извлекаем данные клиента из JSON
+                string client_name = request_body["client_name"].as_string();
+                string client_phone = request_body["client_phone"].as_string();
+                string client_address = request_body["client_address"].as_string();
+                string client_email = request_body["client_email"].as_string();
+
+                // Вызов хранимой процедуры для создания клиента
+                create_client(client_name, client_phone, client_address, client_email);
+
+                // Отвечаем успешным статусом
+                request.reply(status_codes::OK);
+            }).wait();
         } else {
             request.reply(status_codes::NotFound);
         }
@@ -60,16 +63,16 @@ int main() {
 
     try {
         listener.open().then([&listener]() {
-            cout << "Server is listening on http://localhost:8080" << endl;
+            cout << "Сервер слушает на http://localhost:8080" << endl;
         }).wait();
 
         while (true);
     } catch (const std::exception& e) {
-        cerr << "Error: " << e.what() << endl;
+        cerr << "Ошибка: " << e.what() << endl;
     }
 
     return 0;
 }
-
-
 // compile:  g++ main.cpp -o main -lboost_system -lcpprest -lssl -lcrypto
+// g++ main.cpp -o main -lboost_system -lcpprest -lssl -lcrypto -lpq
+// g++ main.cpp -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
