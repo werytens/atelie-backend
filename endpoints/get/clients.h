@@ -1,5 +1,5 @@
-#ifndef CLIENT_MANAGER_POST_H
-#define CLIENT_MANAGER_POST_H
+#ifndef CLIENT_MANAGER_GET_H
+#define CLIENT_MANAGER_GET_H
 
 #include <string>
 #include <cpprest/json.h>
