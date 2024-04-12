@@ -5,6 +5,7 @@
 #include <libpq-fe.h>
 #include "endpoints/post/clients/clients.h"
 #include "endpoints/get/clients/clients.h"
+#include "endpoints/post/services/services.h"
 
 using namespace std;
 using namespace web;
@@ -28,6 +29,15 @@ int main() {
                 string client_email = request_body["client_email"].as_string();
 
                 create_client(client_name, client_phone, client_address, client_email);
+
+                request.reply(status_codes::OK);
+            }).wait();
+        } else if (relative_path == "/services") {
+            request.extract_json().then([=](json::value request_body) {
+                string service_name = request_body["service_name"].as_string();
+                int service_price = request_body["service_price"].as_integer();
+
+                create_service(service_name, service_price);
 
                 request.reply(status_codes::OK);
             }).wait();
@@ -59,3 +69,5 @@ int main() {
 
     return 0;
 }
+
+// g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
