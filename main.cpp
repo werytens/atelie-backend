@@ -11,8 +11,48 @@ using namespace web::http::experimental::listener;
 
 PGconn* conn = nullptr;
 
+const char *conninfo = "dbname=atelie user=postgres password=1234 hostaddr=127.0.0.1 port=5432";
+
+json::value get_all_clients() {
+    json::value clients = json::value::array();
+
+    conn = PQconnectdb(conninfo);
+    if (PQstatus(conn) != CONNECTION_OK) {
+        cerr << "Connection to database failed: " << PQerrorMessage(conn) << endl;
+        PQfinish(conn);
+        return clients;
+    }
+
+    const char* sql = "SELECT * FROM clients";
+    PGresult* res = PQexec(conn, sql);
+
+    if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+        int rows = PQntuples(res);
+        for (int i = 0; i < rows; ++i) {
+            string id = PQgetvalue(res, i, 0);
+            string name = PQgetvalue(res, i, 1);
+            string phone = PQgetvalue(res, i, 2);
+            string address = PQgetvalue(res, i, 3);
+            string email = PQgetvalue(res, i, 4);
+
+            json::value client;
+            client["id"] = json::value::string(id);
+            client["name"] = json::value::string(name);
+            client["phone"] = json::value::string(phone);
+            client["address"] = json::value::string(address);
+            client["email"] = json::value::string(email);
+
+            clients[i] = client;
+        }
+    }
+
+    PQclear(res);
+    PQfinish(conn);
+
+    return clients;
+}
+
 void create_client(const string& client_name, const string& client_phone, const string& client_address, const string& client_email) {
-    const char *conninfo = "dbname=atelie user=postgres password=1234 hostaddr=127.0.0.1 port=5432";
     conn = PQconnectdb(conninfo);
 
     if (PQstatus(conn) != CONNECTION_OK) {
@@ -42,20 +82,27 @@ int main() {
     listener.support(methods::POST, [](const http_request& request) {
         auto relative_path = uri::decode(request.relative_uri().path());
         if (relative_path == "/clients") {
-            // Обработка POST запроса для создания клиента
             request.extract_json().then([=](json::value request_body) {
-                // Извлекаем данные клиента из JSON
                 string client_name = request_body["client_name"].as_string();
                 string client_phone = request_body["client_phone"].as_string();
                 string client_address = request_body["client_address"].as_string();
                 string client_email = request_body["client_email"].as_string();
 
-                // Вызов хранимой процедуры для создания клиента
                 create_client(client_name, client_phone, client_address, client_email);
 
-                // Отвечаем успешным статусом
                 request.reply(status_codes::OK);
             }).wait();
+        } else {
+            request.reply(status_codes::NotFound);
+        }
+    });
+
+    listener.support(methods::GET, [](const http_request& request) {
+        auto relative_path = uri::decode(request.relative_uri().path());
+        if (relative_path == "/clients") {
+            json::value response_body = get_all_clients();
+            
+            request.reply(status_codes::OK, response_body);
         } else {
             request.reply(status_codes::NotFound);
         }
