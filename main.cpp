@@ -3,8 +3,8 @@
 #include <cpprest/http_listener.h>
 #include <cpprest/json.h>
 #include <libpq-fe.h>
-#include "endpoints/post/clients.h"
-#include "endpoints/get/clients.h" // Обязательно включите заголовочный файл здесь
+#include "endpoints/post/clients/clients.h"
+#include "endpoints/get/clients/clients.h"
 
 using namespace std;
 using namespace web;
