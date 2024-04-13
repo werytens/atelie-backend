@@ -128,6 +128,4 @@ int main() {
     return 0;
 }
 
-// g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq'
-// g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp endpoints/get/services/services.cpp endpoints/post/orders/orders.cpp endpoints/get/orders/orders.cpp endpoints/post/coupons/coupons.cpp endpoints/get/coupons/coupons.cpp -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
 // g++ main.cpp endpoints/*/*/*.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
