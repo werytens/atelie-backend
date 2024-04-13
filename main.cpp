@@ -74,7 +74,7 @@ int main() {
                 request.reply(status_codes::OK);
             }).wait();
         } else if (relative_path == "/complete-order") {
-             request.extract_json().then([=](json::value request_body) {
+            request.extract_json().then([=](json::value request_body) {
                 int order_id = request_body["order_id"].as_integer();
                 complete_order(order_id);
 
