@@ -8,11 +8,18 @@
 #include "endpoints/post/services/services.h"
 #include "endpoints/post/coupons/coupons.h"
 #include "endpoints/post/orders/orders.h"
+#include "endpoints/get/coupons/coupons.h"
+#include "endpoints/get/services/services.h"
+#include "endpoints/get/orders/orders.h"
+
+
 
 using namespace std;
 using namespace web;
 using namespace web::http;
 using namespace web::http::experimental::listener;
+
+
 
 PGconn* conn = nullptr;
 
@@ -91,6 +98,18 @@ int main() {
             json::value response_body = get_all_clients();
             
             request.reply(status_codes::OK, response_body);
+        } else if (relative_path == "/coupons") {
+            json::value response_body = get_all_coupons();
+            
+            request.reply(status_codes::OK, response_body);
+        } else if (relative_path == "/services") {
+            json::value response_body = get_all_services();
+            
+            request.reply(status_codes::OK, response_body);
+        } else if (relative_path == "/orders") {
+            json::value response_body = get_all_orders();
+            
+            request.reply(status_codes::OK, response_body);
         } else {
             request.reply(status_codes::NotFound);
         }
@@ -111,3 +130,4 @@ int main() {
 
 // g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq'
 // g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp endpoints/get/services/services.cpp endpoints/post/orders/orders.cpp endpoints/get/orders/orders.cpp endpoints/post/coupons/coupons.cpp endpoints/get/coupons/coupons.cpp -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
+// g++ main.cpp endpoints/*/*/*.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
