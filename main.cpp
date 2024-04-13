@@ -7,6 +7,7 @@
 #include "endpoints/get/clients/clients.h"
 #include "endpoints/post/services/services.h"
 #include "endpoints/post/coupons/coupons.h"
+#include "endpoints/post/orders/orders.h"
 
 using namespace std;
 using namespace web;
@@ -22,7 +23,7 @@ int main() {
 
     listener.support(methods::POST, [](const http_request& request) {
         auto relative_path = uri::decode(request.relative_uri().path());
-        if (relative_path == "/clients") {
+        if (relative_path == "/client") {
             request.extract_json().then([=](json::value request_body) {
                 string client_name = request_body["client_name"].as_string();
                 string client_phone = request_body["client_phone"].as_string();
@@ -33,7 +34,7 @@ int main() {
 
                 request.reply(status_codes::OK);
             }).wait();
-        } else if (relative_path == "/services") {
+        } else if (relative_path == "/service") {
             request.extract_json().then([=](json::value request_body) {
                 string service_name = request_body["service_name"].as_string();
                 int service_price = request_body["service_price"].as_integer();
@@ -44,10 +45,38 @@ int main() {
             }).wait();
         } else if (relative_path == "/coupon") {
             request.extract_json().then([=](json::value request_body) {
-                string coupon_name = request_body["service_name"].as_string();
-                int coupon_discount = request_body["service_price"].as_integer();
+                string coupon_name = request_body["coupon_name"].as_string();
+                int coupon_discount = request_body["coupon_discount"].as_integer();
 
                 create_coupon(coupon_name, coupon_discount);
+
+                request.reply(status_codes::OK);
+            }).wait();
+        } else if (relative_path == "/create-order") {
+            request.extract_json().then([=](json::value request_body) {
+                int order_client_id = request_body["order_client_id"].as_integer();
+                string order_date = request_body["order_date"].as_string();
+                int order_amount = request_body["order_amount"].as_integer();
+
+                create_order(order_client_id, order_date, order_amount);
+
+                request.reply(status_codes::OK);
+            }).wait();
+        } else if (relative_path == "/insert-service") {
+            request.extract_json().then([=](json::value request_body) {
+                int order_id = request_body["order_id"].as_integer();
+                int service_id = request_body["service_id"].as_integer();
+                int coupon_id = request_body["coupon_id"].as_integer();
+                int service_amount = request_body["service_amount"].as_integer();
+
+                insert_service(order_id, service_id, coupon_id, service_amount);
+
+                request.reply(status_codes::OK);
+            }).wait();
+        } else if (relative_path == "/complete-order") {
+             request.extract_json().then([=](json::value request_body) {
+                int order_id = request_body["order_id"].as_integer();
+                complete_order(order_id);
 
                 request.reply(status_codes::OK);
             }).wait();
