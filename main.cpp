@@ -6,6 +6,7 @@
 #include "endpoints/post/clients/clients.h"
 #include "endpoints/get/clients/clients.h"
 #include "endpoints/post/services/services.h"
+#include "endpoints/post/coupons/coupons.h"
 
 using namespace std;
 using namespace web;
@@ -41,6 +42,15 @@ int main() {
 
                 request.reply(status_codes::OK);
             }).wait();
+        } else if (relative_path == "/coupon") {
+            request.extract_json().then([=](json::value request_body) {
+                string coupon_name = request_body["service_name"].as_string();
+                int coupon_discount = request_body["service_price"].as_integer();
+
+                create_coupon(coupon_name, coupon_discount);
+
+                request.reply(status_codes::OK);
+            }).wait();
         } else {
             request.reply(status_codes::NotFound);
         }
@@ -70,4 +80,5 @@ int main() {
     return 0;
 }
 
-// g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
+// g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq'
+// g++ main.cpp endpoints/post/clients/clients.cpp endpoints/get/clients/clients.cpp endpoints/post/services/services.cpp endpoints/get/services/services.cpp endpoints/post/orders/orders.cpp endpoints/get/orders/orders.cpp endpoints/post/coupons/coupons.cpp endpoints/get/coupons/coupons.cpp -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
