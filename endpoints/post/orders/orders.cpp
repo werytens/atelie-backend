@@ -32,7 +32,7 @@ void create_order(int order_client_id, const std::string& order_date, int order_
     PQfinish(conn);
 }
 
-void insert_service(int order_id, int service_id, int coupon_id, int service_amount) {
+void insert_service(int order_id, int service_id, int* coupon_id, int service_amount) {
     conn = PQconnectdb(conninfo);
 
     if (PQstatus(conn) != CONNECTION_OK) {
@@ -41,17 +41,17 @@ void insert_service(int order_id, int service_id, int coupon_id, int service_amo
         exit(1);
     }
 
-    char* sql = "INSERT INTO orders (ID_order, ID_service, ID_coupon, amount_compositions) VALUES ($1, $2, $3, $4)";
-    const char* params[4] = {to_string(order_id).c_str(), to_string(service_id).c_str(), to_string(coupon_id).c_str(), to_string(service_amount).c_str()};
-
+    PGresult* res;
+   
     if (coupon_id == nullptr) {
-        sql = "INSERT INTO orders (ID_order, ID_service, amount_compositions) VALUES ($1, $2, $3)";
+        const char* sql = "INSERT INTO orders (ID_order, ID_service, amount_compositions) VALUES ($1, $2, $3)";
         const char* otherParams[3] = {to_string(order_id).c_str(), to_string(service_id).c_str(), to_string(service_amount).c_str()};
-        PGresult* res = PQexecParams(conn, sql, 3, nullptr, otherParams, nullptr, nullptr, 0);
+        res = PQexecParams(conn, sql, 3, nullptr, otherParams, nullptr, nullptr, 0);
     } else {
-        PGresult* res = PQexecParams(conn, sql, 4, nullptr, params, nullptr, nullptr, 0);
+        const char* sql = "INSERT INTO orders (ID_order, ID_service, ID_coupon, amount_compositions) VALUES ($1, $2, $3, $4)";
+        const char* params[4] = {to_string(order_id).c_str(), to_string(service_id).c_str(), to_string(*coupon_id).c_str(), to_string(service_amount).c_str()};
+        res = PQexecParams(conn, sql, 4, nullptr, params, nullptr, nullptr, 0);
     } 
-
 
     if (PQresultStatus(res) != PGRES_COMMAND_OK) {
         cerr << "Failed to insert service: " << PQerrorMessage(conn) << endl;

@@ -66,10 +66,10 @@ int main() {
             request.extract_json().then([=](json::value request_body) {
                 int order_id = request_body["order_id"].as_integer();
                 int service_id = request_body["service_id"].as_integer();
-                int coupon_id = request_body["coupon_id"].as_integer();
                 int service_amount = request_body["service_amount"].as_integer();
 
-                insert_service(order_id, service_id, coupon_id, service_amount);
+                int coupon_id = request_body["coupon_id"].is_null() ? -1 : request_body["coupon_id"].as_integer();
+                insert_service(order_id, service_id, (coupon_id == -1) ? nullptr : &coupon_id, service_amount);
 
                 request.reply(status_codes::OK);
             }).wait();

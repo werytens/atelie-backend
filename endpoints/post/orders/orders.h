@@ -5,7 +5,7 @@
 #include <cpprest/json.h>
 
 void create_order(int order_client_id, const std::string& order_date, int order_amount);
-void insert_service(int order_id, int service_id, int coupon_id, int service_amount);
+void insert_service(int order_id, int service_id, int* coupon_id, int service_amount);
 void complete_order(int order_id);
 
 #endif // ORDERS_MANAGER_H
