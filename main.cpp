@@ -55,19 +55,31 @@ int main() {
             }).wait();
         } else if (relative_path == "/service") {
             request.extract_json().then([=](json::value request_body) {
+                vector<Service> services;
+
                 string service_name = request_body["service_name"].as_string();
                 int service_price = request_body["service_price"].as_integer();
 
-                create_service(service_name, service_price);
+                services.push_back(Service{service_name, service_price});
+
+                create_service(services);
+
+                services.clear();
 
                 request.reply(response);
             }).wait();
         } else if (relative_path == "/coupon") {
             request.extract_json().then([=](json::value request_body) {
+                vector<Coupon> coupons; 
+
                 string coupon_name = request_body["coupon_name"].as_string();
                 int coupon_discount = request_body["coupon_discount"].as_integer();
 
-                create_coupon(coupon_name, coupon_discount);
+                coupons.push_back(Coupon{coupon_name, coupon_discount});
+
+                create_coupon(coupons);
+
+                coupons.clear();
 
                 request.reply(response);
             }).wait();

@@ -2,7 +2,13 @@
 #define SERVICES_MANAGER_POST_H
 
 #include <string>
+#include <cpprest/json.h>
 
-void create_service(const std::string& service_name, int service_price);
+struct Service {
+    std::string name;
+    int price;
+};
+
+void create_service(std::vector<Service>& services);
 
 #endif // SERVICES_MANAGER_POST_H
