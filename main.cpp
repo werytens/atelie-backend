@@ -33,8 +33,6 @@ int main() {
 
         http_response response(status_codes::OK);
         response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
-        response.headers().add(U("Access-Control-Allow-Methods"), U("GET, POST, OPTIONS"));
-        response.headers().add(U("Access-Control-Allow-Headers"), U("Content-Type"));
 
         auto relative_path = uri::decode(request.relative_uri().path());
         if (relative_path == "/client") {
@@ -55,7 +53,7 @@ int main() {
 
                 create_service(service_name, service_price);
 
-                request.reply(status_codes::OK);
+                request.reply(response);
             }).wait();
         } else if (relative_path == "/coupon") {
             request.extract_json().then([=](json::value request_body) {
@@ -64,7 +62,7 @@ int main() {
 
                 create_coupon(coupon_name, coupon_discount);
 
-                request.reply(status_codes::OK);
+                request.reply(response);
             }).wait();
         } else if (relative_path == "/create-order") {
             request.extract_json().then([=](json::value request_body) {
@@ -74,7 +72,7 @@ int main() {
 
                 create_order(order_client_id, order_date, order_amount);
 
-                request.reply(status_codes::OK);
+                request.reply(response);
             }).wait();
         } else if (relative_path == "/insert-service") {
             request.extract_json().then([=](json::value request_body) {
@@ -85,14 +83,14 @@ int main() {
                 int coupon_id = request_body["coupon_id"].is_null() ? -1 : request_body["coupon_id"].as_integer();
                 insert_service(order_id, service_id, (coupon_id == -1) ? nullptr : &coupon_id, service_amount);
 
-                request.reply(status_codes::OK);
+                request.reply(response);
             }).wait();
         } else if (relative_path == "/complete-order") {
             request.extract_json().then([=](json::value request_body) {
                 int order_id = request_body["order_id"].as_integer();
                 complete_order(order_id);
 
-                request.reply(status_codes::OK);
+                request.reply(response);
             }).wait();
         } else {
             request.reply(status_codes::NotFound);
@@ -103,37 +101,35 @@ int main() {
 
         http_response response(status_codes::OK);
         response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
-        response.headers().add(U("Access-Control-Allow-Methods"), U("GET, POST, OPTIONS"));
-        response.headers().add(U("Access-Control-Allow-Headers"), U("Content-Type"));
     
         auto relative_path = uri::decode(request.relative_uri().path());
         if (relative_path == "/clients") {
             json::value response_body = get_all_clients();
+
+            response.set_body(response_body);
             
-            request.reply(status_codes::OK, response_body);
+            request.reply(response);
         } else if (relative_path == "/coupons") {
             json::value response_body = get_all_coupons();
             
-            request.reply(status_codes::OK, response_body);
+            response.set_body(response_body);
+            
+            request.reply(response);
         } else if (relative_path == "/services") {
             json::value response_body = get_all_services();
             
-            request.reply(status_codes::OK, response_body);
+            response.set_body(response_body);
+            
+            request.reply(response);
         } else if (relative_path == "/orders") {
             json::value response_body = get_all_orders();
             
-            request.reply(status_codes::OK, response_body);
+            response.set_body(response_body);
+            
+            request.reply(response);
         } else {
             request.reply(status_codes::NotFound);
         }
-    });
-
-    listener.support(methods::OPTIONS, [](const http_request& request) {
-        http_response response(status_codes::OK);
-        response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
-        response.headers().add(U("Access-Control-Allow-Methods"), U("GET, POST, OPTIONS"));
-        response.headers().add(U("Access-Control-Allow-Headers"), U("Content-Type"));
-        request.reply(response);
     });
 
     try {
