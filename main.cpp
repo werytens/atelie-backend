@@ -2,7 +2,8 @@
 #include <string>
 #include <cpprest/http_listener.h>
 #include <cpprest/json.h>
-#include <libpq-fe.h>
+#include <cpprest/uri.h>
+#include <postgresql/libpq-fe.h>
 #include "endpoints/post/clients/clients.h"
 #include "endpoints/get/clients/clients.h"
 #include "endpoints/post/services/services.h"
@@ -26,9 +27,15 @@ PGconn* conn = nullptr;
 const char *conninfo = "dbname=atelie user=postgres password=1234 hostaddr=127.0.0.1 port=5432";
 
 int main() {
-    http_listener listener("http://localhost:8080");
+    http_listener listener("http://79.137.197.245:8080");
 
     listener.support(methods::POST, [](const http_request& request) {
+
+        http_response response(status_codes::OK);
+        response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+        response.headers().add(U("Access-Control-Allow-Methods"), U("GET, POST, OPTIONS"));
+        response.headers().add(U("Access-Control-Allow-Headers"), U("Content-Type"));
+
         auto relative_path = uri::decode(request.relative_uri().path());
         if (relative_path == "/client") {
             request.extract_json().then([=](json::value request_body) {
@@ -93,6 +100,12 @@ int main() {
     });
 
     listener.support(methods::GET, [](const http_request& request) {
+
+        http_response response(status_codes::OK);
+        response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+        response.headers().add(U("Access-Control-Allow-Methods"), U("GET, POST, OPTIONS"));
+        response.headers().add(U("Access-Control-Allow-Headers"), U("Content-Type"));
+    
         auto relative_path = uri::decode(request.relative_uri().path());
         if (relative_path == "/clients") {
             json::value response_body = get_all_clients();
@@ -113,6 +126,14 @@ int main() {
         } else {
             request.reply(status_codes::NotFound);
         }
+    });
+
+    listener.support(methods::OPTIONS, [](const http_request& request) {
+        http_response response(status_codes::OK);
+        response.headers().add(U("Access-Control-Allow-Origin"), U("*"));
+        response.headers().add(U("Access-Control-Allow-Methods"), U("GET, POST, OPTIONS"));
+        response.headers().add(U("Access-Control-Allow-Headers"), U("Content-Type"));
+        request.reply(response);
     });
 
     try {
