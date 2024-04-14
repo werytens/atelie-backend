@@ -3,7 +3,7 @@
 #include <cpprest/http_listener.h>
 #include <cpprest/json.h>
 #include <cpprest/uri.h>
-#include <postgresql/libpq-fe.h>
+#include <libpq-fe.h>
 #include "endpoints/post/clients/clients.h"
 #include "endpoints/get/clients/clients.h"
 #include "endpoints/post/services/services.h"
@@ -26,8 +26,9 @@ PGconn* conn = nullptr;
 
 const char *conninfo = "dbname=atelie user=postgres password=1234 hostaddr=127.0.0.1 port=5432";
 
+
 int main() {
-    http_listener listener("http://79.137.197.245:8080");
+    http_listener listener("http://localhost:8080");
 
     listener.support(methods::POST, [](const http_request& request) {
 
@@ -37,12 +38,18 @@ int main() {
         auto relative_path = uri::decode(request.relative_uri().path());
         if (relative_path == "/client") {
             request.extract_json().then([=](json::value request_body) {
+                vector<Client> clients; 
+
                 string client_name = request_body["client_name"].as_string();
                 string client_phone = request_body["client_phone"].as_string();
                 string client_address = request_body["client_address"].as_string();
                 string client_email = request_body["client_email"].as_string();
 
-                create_client(client_name, client_phone, client_address, client_email);
+                clients.push_back(Client{client_name, client_phone, client_address, client_email});
+
+                create_clients(clients);
+
+                clients.clear();
 
                 request.reply(status_codes::OK);
             }).wait();

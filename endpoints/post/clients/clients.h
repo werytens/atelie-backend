@@ -2,8 +2,16 @@
 #define CLIENT_MANAGER_POST_H
 
 #include <string>
+#include <vector>
 #include <cpprest/json.h>
 
-void create_client(const std::string& client_name, const std::string& client_phone, const std::string& client_address, const std::string& client_email);
+struct Client {
+    std::string name;
+    std::string phone;
+    std::string address;
+    std::string email;
+};
 
-#endif // CLIENT_MANAGER_H
+void create_clients(std::vector<Client>& clients);
+
+#endif

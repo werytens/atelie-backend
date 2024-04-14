@@ -8,7 +8,7 @@ extern PGconn* conn;
 
 extern const char *conninfo;
 
-void create_client(const string& client_name, const string& client_phone, const string& client_address, const string& client_email) {
+void create_clients(std::vector<Client>& clients) { 
     conn = PQconnectdb(conninfo);
 
     if (PQstatus(conn) != CONNECTION_OK) {
@@ -18,16 +18,19 @@ void create_client(const string& client_name, const string& client_phone, const 
     }
 
     const char* sql = "INSERT INTO clients (FCS_client, phone_client, address_client, email_client) VALUES ($1, $2, $3, $4)";
-    const char* params[4] = {client_name.c_str(), client_phone.c_str(), client_address.c_str(), client_email.c_str()};
-    PGresult* res = PQexecParams(conn, sql, 4, nullptr, params, nullptr, nullptr, 0);
+    for (const auto& client : clients) {
+        const char* params[4] = {client.name.c_str(), client.phone.c_str(), client.address.c_str(), client.email.c_str()};
+        PGresult* res = PQexecParams(conn, sql, 4, nullptr, params, nullptr, nullptr, 0);
 
-    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-        cerr << "Failed to insert client: " << PQerrorMessage(conn) << endl;
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            cerr << "Failed to insert client: " << PQerrorMessage(conn) << endl;
+            PQclear(res);
+            PQfinish(conn);
+            exit(1);
+        }
+
         PQclear(res);
-        PQfinish(conn);
-        exit(1);
     }
 
-    PQclear(res);
     PQfinish(conn);
 }
