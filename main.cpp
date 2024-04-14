@@ -151,5 +151,3 @@ int main() {
 
     return 0;
 }
-
-// g++ main.cpp endpoints/*/*/*.cpp  -o main -lboost_system -lcpprest -lssl -lcrypto -I/usr/include -lpq
