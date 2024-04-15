@@ -1,4 +1,4 @@
-# Atelier Backend
+# Atelie Backend
 
 ## Setup
 - Update db information in `main.cpp:27`
